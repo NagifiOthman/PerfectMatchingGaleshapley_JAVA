@@ -3,6 +3,10 @@
 // Robert Laganiere, uottawa.ca
 import java.io.*;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.management.relation.Role;
 
 // this is the (incomplete) class that will generate the resident and program maps
 public class GaleShapley {
@@ -178,6 +182,72 @@ public class GaleShapley {
 			programs.put(programID,program);
 		}	
     }
+	public HashMap<String, int[]> buildROL_Programms() {
+    HashMap<String, int[]> rol_programms = new HashMap<>();
+    for (String programID : programs.keySet()) {
+        Program program = programs.get(programID);
+        rol_programms.put(programID, program.getROL());
+    }
+    return rol_programms;
+	}
+
+	public HashMap<Integer, String[]> buildROL_Residents(Resident r) {
+   	 HashMap<Integer, String[]> rol_residents = new HashMap<>();
+    	for (Integer residentID : residents.keySet()) {
+       	 Resident resident = residents.get(residentID);
+       	 rol_residents.put(residentID, resident.getRol());
+    		}
+    	return rol_residents;
+	
+	}
+	private boolean containsResident(int residentID, int[] rol) {
+	for (int id : rol) {
+		if (id == residentID) {
+			return true;
+		}
+	}
+	return false;
+	}
+	public void GaleShapleyMatch(HashMap<Integer,Resident> residents, HashMap<String,int[]> ROL_Programms, HashMap<Integer,String[]> ROL_Residents){
+		HashMap<Resident, Program> Matched = new HashMap<>();
+		HashMap<Resident, Program> UnMatched = new HashMap<>();
+		 
+   		//HashMap<Integer, String[]> ROL_Residents = buildROL_Residents();
+		//verify that al residents has been matched or cant be 
+		while(residents.size()!=(Matched.size()+UnMatched.size())){
+			Resident PickedResident=null;
+			for(Resident r: residents.values()){
+				if(!Matched.contains(r.getResidentID())){
+					PickedResident=r;
+					residents.remove(r.getResidentID());// to verify
+				}
+			}
+			for(String ProgramId:ROL_Residents.get(PickedResident.getResidentID())){
+				Program p= programs.get(ProgramId);
+				if(p.containsResident(PickedResident.getResidentID())){
+
+					continue;
+			}
+				else if(!p.hasReachedQuota()){
+					Matched.put(PickedResident, p);
+					break;
+				}
+				else if( p.getLeastPreferredMatchedRank()<p.getMatchedRank(PickedResident.getResidentID())){
+					Resident leastPreferredMatchedResident = p.getLeastPreferredMatchedResident();
+					UnMatched.put(leastPreferredMatchedResident, p);
+					Matched.remove(leastPreferredMatchedResident);
+					Matched.put(PickedResident, p);
+					break;
+				}
+
+		}
+	}
+
+	}
+			
+
+			
+	
 
 	public static void main(String[] args) {
 		
@@ -191,7 +261,7 @@ public class GaleShapley {
 			
         } catch (Exception e) {
 			System.out.println("Usage: java GaleShapley residentsFile programsFile");
-            System.err.println("Error reading the file because it is empty : " + e.getMessage());
+            System.err.println("Error reading the file : " + e.getMessage());
         }
 	}
 }

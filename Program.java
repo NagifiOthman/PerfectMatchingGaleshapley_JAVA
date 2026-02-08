@@ -10,7 +10,7 @@ public class Program {
 	private String name;
 	private int quota;
 	private int[] rol;// resident IDs in order of preference
-	private ArrayList<Integer> matchedResidents;// Resident IDs of matched residents with this program
+	private ArrayList<Resident> matchedResidents;// Resident IDs of matched residents with this program
 
 
 	
@@ -20,6 +20,7 @@ public class Program {
 		programID= id;
 		name= n;
 		quota= q;
+		matchedResidents= new ArrayList<Resident>();
 	}
 
     // the rol in order of preference
@@ -27,7 +28,10 @@ public class Program {
 		
 		this.rol= rol;
 	}
-	
+	public int[] getROL() {
+		
+		return rol;
+	}
 	// string representation
 	public String toString() {
       
@@ -54,28 +58,66 @@ public class Program {
 	public int getLeastPreferredMatchedRank() {
 		int leastRank= -1;
 		for (int i=0; i < matchedResidents.size(); i++) {
-			int rank= getMatchedRank(matchedResidents.get(i));
+			int rank= getMatchedRank(matchedResidents.get(i).getResidentID());
 			if (rank > leastRank) {
 				leastRank= rank;
 			}
 		}
 		return leastRank;
 	}
-	public void addMatchedResident(int residentID) {
-		// add residentID to matchedResidents TODO
-		if (quota >0){
-			this.matchedResidents.add(residentID);
-			quota--;
-		}
-		int	LeastPreferredResident=this.getLeastPreferredMatchedRank();
-		for(Integer Residents: matchedResidents){
-			if(Residents == residentID){
-				break;
+	public Resident getLeastPreferredMatchedResident(Program p) {//todo
+		Program target= (p == null) ? this : p;
+		int leastRank= target.getLeastPreferredMatchedRank();
+		for (int i=0; i < matchedResidents.size(); i++) {
+			Resident resident= matchedResidents.get(i);
+			int rank= target.getMatchedRank(resident.getResidentID());
+			if (rank == leastRank) {
+				return resident;
 			}
 		}
-		if(quota ==0){
-			System.out.println("Program "+ this.programID + " has reached its quota.");
+		return null;
+	}
+	public boolean containsResident(int residentID) {
+		for (int i=0;i<rol.length;i++) {
+			if (rol[i] == residentID) {
+				return true;
+			}
+		
+			}
+		return false;
 		}
+		public boolean hasReachedQuota() {
+			return matchedResidents.size() >= quota;
+		}
+		
 
+	
+	public void addMatchedResident(Resident r) {
+		if (r == null) {
+			return;
+		}
+		if (!containsResident(r.getResidentID())) {
+			return;
+		}
+		if (matchedResidents.contains(r)) {
+			r.setMatchedProgramID(programID);
+			return;
+		}
+		if (!hasReachedQuota()) {
+			matchedResidents.add(r);
+			r.setMatchedProgramID(programID);
+			return;
+		}
+		int newRank= getMatchedRank(r.getResidentID());
+		int leastRank= getLeastPreferredMatchedRank();
+		if (newRank != -1 && leastRank != -1 && newRank < leastRank) {
+			Resident leastPreferred= getLeastPreferredMatchedResident(this);
+			if (leastPreferred != null) {
+				matchedResidents.remove(leastPreferred);
+				leastPreferred.setMatchedProgramID(null);
+			}
+			matchedResidents.add(r);
+			r.setMatchedProgramID(programID);
+		}
 	}
 }
