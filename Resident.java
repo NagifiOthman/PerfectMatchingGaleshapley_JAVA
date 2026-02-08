@@ -33,6 +33,12 @@ public class Resident {
 	public int getResidentID() {
 		return residentID;
 	}
+	public String getFirstname() {
+		return firstname;
+	}
+	public String getLastname() {
+		return lastname;
+	}
 	public boolean  isMatched(){
 		return matchedProgramID != null;
 	}

@@ -208,6 +208,34 @@ public class GaleShapley {
 	}
 	return false;
 	}
+	
+	public void printResults(ArrayList<HashMap<Resident, Program>> result) {
+		HashMap<Resident, Program> matched = result.get(0);
+		HashMap<Resident, Program> unmatched = result.get(1);
+		
+		// Print header
+		System.out.println("lastname,firstname,residentID,programID,name");
+		
+		// Create a list of all residents to sort by lastname
+		ArrayList<Resident> allResidents = new ArrayList<>(residents.values());
+		allResidents.sort((r1, r2) -> r1.getLastname().compareTo(r2.getLastname()));
+		
+		// Print each resident
+		for (Resident r : allResidents) {
+			if (matched.containsKey(r)) {
+				Program p = matched.get(r);
+				System.out.println(r.getLastname() + "," + r.getFirstname() + "," + 
+								   r.getResidentID() + "," + p.getProgramID() + "," + p.getName());
+			} else {
+				System.out.println(r.getLastname() + "," + r.getFirstname() + "," + 
+								   r.getResidentID() + ",XXX,NOT_MATCHED");
+			}
+		}
+		
+		// Print unmatched count
+		System.out.println("\nNumber of unmatched residents: " + unmatched.size());
+	}
+	
 	public ArrayList<HashMap<Resident, Program>> GaleShapleyMatch(HashMap<Integer,Resident> residents, HashMap<String,int[]> ROL_Programms, HashMap<Integer,String[]> ROL_Residents){
 		HashMap<Resident, Program> Matched = new HashMap<>();
 		HashMap<Resident, Program> UnMatched = new HashMap<>();
@@ -219,7 +247,7 @@ public class GaleShapley {
 		while(residents.size()!=(Matched.size()+UnMatched.size())){
 			Resident PickedResident=null;
 			for(Resident r: residents.values()){
-				if(containsResident(r.getResidentID(), AvailableResidents) || UnMatched.containsKey(r)){
+				if(containsResident(r.getResidentID(), AvailableResidents) ){
 					PickedResident=r;
 					break;
 				}
@@ -233,7 +261,7 @@ public class GaleShapley {
 			
 			for(String ProgramId:ROL_Residents.get(PickedResident.getResidentID())){
 				Program p= programs.get(ProgramId);
-				if(!p.PcontainsResident(PickedResident.getResidentID())){
+				if(!p.programcontainsResident(PickedResident.getResidentID())){
 
 					continue;
 			}
@@ -275,13 +303,9 @@ public class GaleShapley {
 		
 		
 		try {
-			System.out.println("DEbugTest");
 			GaleShapley gs= new GaleShapley(args[0],args[1]);
-			System.out.println("end of debugTest");
-			System.out.println("DEbugTest1");
 			ArrayList<HashMap<Resident, Program>> result=gs.GaleShapleyMatch(gs.residents, gs.buildROL_Programms(), gs.buildROL_Residents());
-			System.out.println(result);
-			System.out.println("end of debug test1");
+			gs.printResults(result);
 			//System.out.println(gs.residents);
 			//System.out.println("end of residents");
 			//System.out.println(gs.programs);
