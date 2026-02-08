@@ -77,7 +77,7 @@ public class Program {
 		}
 		return null;
 	}
-	public boolean containsResident(int residentID) {
+	public boolean PcontainsResident(int residentID) {
 		for (int i=0;i<rol.length;i++) {
 			if (rol[i] == residentID) {
 				return true;
@@ -96,7 +96,7 @@ public class Program {
 		if (r == null) {
 			return;
 		}
-		if (!containsResident(r.getResidentID())) {
+		if (!PcontainsResident(r.getResidentID())) {
 			return;
 		}
 		if (matchedResidents.contains(r)) {

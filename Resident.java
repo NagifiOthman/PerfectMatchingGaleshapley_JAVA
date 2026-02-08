@@ -47,7 +47,7 @@ public class Resident {
 		return rol;
 	}
 	
-	public String  matchedProgramID() {
+	public String  getMatchedProgramID() {
 		if (this.isMatched()) {
 			return matchedProgramID;
 		} else {

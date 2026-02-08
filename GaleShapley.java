@@ -191,7 +191,7 @@ public class GaleShapley {
     return rol_programms;
 	}
 
-	public HashMap<Integer, String[]> buildROL_Residents(Resident r) {
+	public HashMap<Integer, String[]> buildROL_Residents() {
    	 HashMap<Integer, String[]> rol_residents = new HashMap<>();
     	for (Integer residentID : residents.keySet()) {
        	 Resident resident = residents.get(residentID);
@@ -200,68 +200,95 @@ public class GaleShapley {
     	return rol_residents;
 	
 	}
-	private boolean containsResident(int residentID, int[] rol) {
-	for (int id : rol) {
-		if (id == residentID) {
+	private boolean containsResident(int residentID, HashMap<Integer, Resident> AvailableResidents) {
+	for (Resident r : AvailableResidents.values()) {
+		if (r.getResidentID() == residentID) {
 			return true;
 		}
 	}
 	return false;
 	}
-	public void GaleShapleyMatch(HashMap<Integer,Resident> residents, HashMap<String,int[]> ROL_Programms, HashMap<Integer,String[]> ROL_Residents){
+	public ArrayList<HashMap<Resident, Program>> GaleShapleyMatch(HashMap<Integer,Resident> residents, HashMap<String,int[]> ROL_Programms, HashMap<Integer,String[]> ROL_Residents){
 		HashMap<Resident, Program> Matched = new HashMap<>();
 		HashMap<Resident, Program> UnMatched = new HashMap<>();
+		HashMap<Integer,Resident> AvailableResidents = new HashMap<>(residents);
+		
 		 
    		//HashMap<Integer, String[]> ROL_Residents = buildROL_Residents();
 		//verify that al residents has been matched or cant be 
 		while(residents.size()!=(Matched.size()+UnMatched.size())){
 			Resident PickedResident=null;
 			for(Resident r: residents.values()){
-				if(!Matched.contains(r.getResidentID())){
+				if(containsResident(r.getResidentID(), AvailableResidents) || UnMatched.containsKey(r)){
 					PickedResident=r;
-					residents.remove(r.getResidentID());// to verify
+					break;
 				}
 			}
+			
+			if(PickedResident == null){
+				break; // No more available residents to process
+			}
+			
+			AvailableResidents.remove(PickedResident.getResidentID());
+			
 			for(String ProgramId:ROL_Residents.get(PickedResident.getResidentID())){
 				Program p= programs.get(ProgramId);
-				if(p.containsResident(PickedResident.getResidentID())){
+				if(!p.PcontainsResident(PickedResident.getResidentID())){
 
 					continue;
 			}
 				else if(!p.hasReachedQuota()){
 					Matched.put(PickedResident, p);
+					p.addMatchedResident(PickedResident);
+					System.out.println("Matched size:" + 	Matched.size());
+
 					break;
 				}
-				else if( p.getLeastPreferredMatchedRank()<p.getMatchedRank(PickedResident.getResidentID())){
-					Resident leastPreferredMatchedResident = p.getLeastPreferredMatchedResident();
-					UnMatched.put(leastPreferredMatchedResident, p);
-					Matched.remove(leastPreferredMatchedResident);
+				else if( p.getLeastPreferredMatchedRank()>p.getMatchedRank(PickedResident.getResidentID())){
+					Resident LeastPreferedResident=p.getLeastPreferredMatchedResident(p);
+					Matched.remove(LeastPreferedResident);
+					AvailableResidents.put(LeastPreferedResident.getResidentID(), LeastPreferedResident);
 					Matched.put(PickedResident, p);
+					p.addMatchedResident(PickedResident);
+					System.out.println("Matched size:" + Matched.size());
+
 					break;
 				}
+				}
 
+			if(!Matched.containsKey(PickedResident)){
+				UnMatched.put(PickedResident, null);
+				System.out.println("Unmatched size:" + UnMatched.size());
+					
+			}
+
+			
 		}
+	ArrayList<HashMap<Resident, Program>> result = new ArrayList<>();
+	result.add(Matched);
+	result.add(UnMatched);
+	return result;
 	}
 
-	}
-			
-
-			
-	
 
 	public static void main(String[] args) {
 		
 		
 		try {
-			
+			System.out.println("DEbugTest");
 			GaleShapley gs= new GaleShapley(args[0],args[1]);
-			
-			System.out.println(gs.residents);
-			System.out.println(gs.programs);
+			System.out.println("end of debugTest");
+			System.out.println("DEbugTest1");
+			ArrayList<HashMap<Resident, Program>> result=gs.GaleShapleyMatch(gs.residents, gs.buildROL_Programms(), gs.buildROL_Residents());
+			System.out.println(result);
+			System.out.println("end of debug test1");
+			//System.out.println(gs.residents);
+			//System.out.println("end of residents");
+			//System.out.println(gs.programs);
 			
         } catch (Exception e) {
 			System.out.println("Usage: java GaleShapley residentsFile programsFile");
-            System.err.println("Error reading the file : " + e.getMessage());
+            System.err.println("Error reading the file! : " + e.getMessage());
         }
 	}
 }
